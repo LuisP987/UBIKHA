@@ -1,8 +1,16 @@
 from sqlalchemy import text
 from fastapi import FastAPI
-from app.db.database import motor
+from db.database import motor, Base
+from db.models import user
 
 app = FastAPI()
+
+@app.on_event("startup")
+async def on_startup():
+    async with motor.begin() as conn:
+        # await conn.run_sync(Base.metadata.drop_all)  # Solo si quieres resetear la DB
+        await conn.run_sync(Base.metadata.create_all)
+    print("Tablas creadas en la base de datos.")
 
 @app.get("/")
 async def root():
