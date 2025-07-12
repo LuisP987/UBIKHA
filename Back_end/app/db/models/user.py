@@ -15,8 +15,9 @@ class User(Base):
     
     # --- Roles y Estado ---
     is_active = Column(Boolean, default=True)
-    alexander_bitch = Column(Boolean, default=False) # Para saber si es dueño de un inmueble o solo un inquilino
+    is_owner = Column(Boolean, default=False) # Para saber si es dueño de un inmueble o solo un inquilino
     
+
     # --- Timestamps (Auditoría) ---
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
