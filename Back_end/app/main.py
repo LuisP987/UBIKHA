@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from sqlalchemy import text
 from db.database import motor, Base
-from db.models import user
+from models import user
 from api import auth  # 👈 Importa el router
 
 app = FastAPI()
