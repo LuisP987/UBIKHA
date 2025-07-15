@@ -2,12 +2,29 @@ from fastapi import FastAPI
 from sqlalchemy import text
 from db.database import motor, Base
 from models import user
-from api import auth  # 👈 Importa el router
+from api import auth  #Importacion del router
+from api import user as user_router
 
 app = FastAPI()
 
-# 👇 Incluye el router de autenticación
+# # CORS - Dominios Permitidos
+# origins = [
+#     "http://localhost:3000",  #Frontend local
+#     "http://127.0.0.1:3000",
+# ]
+
+# # Middleware de CORS
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=origins,          # Orígenes permitidos
+#     allow_credentials=True,
+#     allow_methods=["*"],            # Métodos permitidos
+#     allow_headers=["*"],            # Headers permitidos
+# )
+
+# Routers
 app.include_router(auth.router)
+app.include_router(user_router.router)
 
 @app.on_event("startup")
 async def on_startup():
