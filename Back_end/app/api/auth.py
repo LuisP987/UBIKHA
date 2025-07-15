@@ -19,16 +19,18 @@ async def login(datos: LoginUsuario, db: AsyncSession = Depends(obtener_sesion))
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales inválidas"
         )
-    
-    # Generar JWT
+
+    # Generar JWT (con rol incluido)
     token = crear_token({
         "sub": usuario.email,
-        "id": usuario.id
+        "id": usuario.id,
+        "rol": usuario.rol  # 👈 incluir el rol en el token (útil para autorización futura)
     })
 
-    # Retornar token al cliente
+    # Retornar token y datos del usuario
     return {
         "access_token": token,
         "token_type": "bearer",
-        "usuario": usuario.email
+        "usuario": usuario.email,
+        "rol": usuario.rol  # 👈 Mostrar rol en la respuesta también
     }

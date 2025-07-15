@@ -4,23 +4,36 @@ from db.database import motor, Base
 from models import user
 from api import auth  #Importacion del router
 from api import user as user_router
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# # CORS - Dominios Permitidos
-# origins = [
-#     "http://localhost:3000",  #Frontend local
-#     "http://127.0.0.1:3000",
-# ]
+# CORS - Dominios Permitidos
+origins = [
+    "http://localhost:5175",
+    #Roy
+    "http://26.214.10.51:8000",
+    "http://26.214.10.51:5175",
+    #Achiri
+    "http://26.131.181.67:8000",
+    "http://26.131.181.67:5175",
+    #Mark
+    "http://26.55.199.45:8000",
+    "http://26.55.199.45:5175",
+    #Luis
+    "http://26.249.199.127:8000",
+    "http://26.249.199.127:5175"
+    
+]
 
-# # Middleware de CORS
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=origins,          # Orígenes permitidos
-#     allow_credentials=True,
-#     allow_methods=["*"],            # Métodos permitidos
-#     allow_headers=["*"],            # Headers permitidos
-# )
+# Middleware de CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,          # Orígenes permitidos
+    allow_credentials=True,
+    allow_methods=["*"],            # Métodos permitidos
+    allow_headers=["*"],            # Headers permitidos
+)
 
 # Routers
 app.include_router(auth.router)
