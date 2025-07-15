@@ -1,0 +1,35 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from db.database import obtener_sesion
+from models.user import User
+from schemas.user import UsuarioCrear, UsuarioMostrar
+from utils.seguridad import hashear_password
+
+router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
+
+@router.get("/", response_model=list[UsuarioMostrar])
+async def listar_usuarios(db: AsyncSession = Depends(obtener_sesion)):
+    resultado = await db.execute(select(User))
+    return resultado.scalars().all()
+
+@router.get("/{email}", response_model=UsuarioMostrar)
+async def obtener_usuario(email: str, db: AsyncSession = Depends(obtener_sesion)):
+    resultado = await db.execute(select(User).where(User.email == email))
+    usuario = resultado.scalars().first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return usuario
+
+@router.post("/", response_model=UsuarioMostrar)
+async def crear_usuario(datos: UsuarioCrear, db: AsyncSession = Depends(obtener_sesion)):
+    nuevo_usuario = User(
+        email=datos.email,
+        hashed_password=hashear_password(datos.password),
+        full_name=datos.full_name,
+        phone_number=datos.phone_number,
+    )
+    db.add(nuevo_usuario)
+    await db.commit()
+    await db.refresh(nuevo_usuario)
+    return nuevo_usuario
