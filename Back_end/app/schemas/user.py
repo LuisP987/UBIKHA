@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 
 class LoginUsuario(BaseModel):
@@ -20,3 +20,8 @@ class UsuarioMostrar(BaseModel):
 
     class Config:
         orm_mode = True
+        
+class RegistroUsuario(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=6)
+    full_name: str = Field(..., max_length=100)

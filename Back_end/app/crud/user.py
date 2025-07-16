@@ -5,3 +5,10 @@ from models.user import User
 async def buscar_usuario_por_email(db: AsyncSession, email: str):
     resultado = await db.execute(select(User).where(User.email == email))
     return resultado.scalars().first()
+
+async def crear_usuario(db: AsyncSession, datos: dict):
+    nuevo = User(**datos)
+    db.add(nuevo)
+    await db.commit()
+    await db.refresh(nuevo)
+    return nuevo
