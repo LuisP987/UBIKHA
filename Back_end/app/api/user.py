@@ -4,7 +4,7 @@ from sqlalchemy.future import select
 from db.database import obtener_sesion
 from models.user import User
 from schemas.user import UsuarioCrear, UsuarioMostrar
-from utils.seguridad import hashear_password
+from utils.security.seguridad import hashear_password
 
 router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
 

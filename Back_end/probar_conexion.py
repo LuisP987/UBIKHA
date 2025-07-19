@@ -1,4 +1,4 @@
-from Back_end.app.db.database import motor
+from app.db.database import motor
 import asyncio
 print("aaaaaa")
 async def probar_conexion():
