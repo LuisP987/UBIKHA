@@ -1,26 +1,31 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy.sql import func
 from db.database import Base  # Importamos la Base declarativa
+from sqlalchemy import Float, ForeignKey
+from sqlalchemy.orm import relationship
 
-class User(Base):
-    __tablename__ = "users"
-
-    # --- Columnas Principales ---
-    id = Column(Integer, primary_key=True, index=True)
+# Modelo Usuario
+class Usuario(Base):
+    __tablename__ = "usuarios"
+    id_usuario = Column(Integer, primary_key=True, index=True)
+    nombres = Column(String(100), nullable=False)
+    apellido_paterno = Column(String(50), nullable=False)
+    apellido_materno = Column(String(50), nullable=True)
+    num_celular = Column(String(20), unique=True, nullable=True)
+    fecha_nacimiento = Column(DateTime, nullable=True)
     email = Column(String(100), unique=True, index=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
+    password = Column(String(255), nullable=False)
+    celular_verificado = Column(Boolean, default=False)
+    codigo_verificacion = Column(String(10), nullable=True)
+    fecha_registro = Column(DateTime, server_default=func.now())
+    fecha_actualizacion = Column(DateTime, onupdate=func.now())
+    tipo_usuario = Column(String(20), default="client")
+    activo = Column(Boolean, default=True)
 
-    # --- Información del Perfil ---
-    full_name = Column(String(100), nullable=True)
-    phone_number = Column(String(20), unique=True, nullable=True)
-
-    # --- Roles y Estado ---
-    is_active = Column(Boolean, default=True)
-    rol = Column(String(20), default="client")  # Valores esperados: client, owner, admin
-
-    # --- Timestamps (Auditoría) ---
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    inmuebles = relationship("Inmueble", back_populates="propietario")
+    reservas = relationship("Reserva", back_populates="usuario")
+    favoritos = relationship("Favorito", back_populates="usuario")
+    resenas = relationship("Resena", back_populates="usuario")
 
     def __repr__(self):
-        return f"<User(id={self.id}, email='{self.email}', rol='{self.rol}')>"
+        return f"<Usuario(id_usuario={self.id_usuario}, email='{self.email}', tipo_usuario='{self.tipo_usuario}')>"
