@@ -21,6 +21,7 @@ class Usuario(Base):
     fecha_actualizacion = Column(DateTime, onupdate=func.now())
     tipo_usuario = Column(String(20), default="client")
     activo = Column(Boolean, default=True)
+    notificaciones = relationship("Notificacion", back_populates="usuario")
 
     inmuebles = relationship("Inmueble", back_populates="propietario")
     reservas = relationship("Reserva", back_populates="usuario")

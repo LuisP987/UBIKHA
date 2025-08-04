@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from ..schemas.verification import PhoneVerification, CodeVerification
-from ..services.whatsapp import WhatsAppService
+from schemas.verification import PhoneVerification, CodeVerification
+from services.whatsapp import WhatsAppService
 
 router = APIRouter(prefix="/verification", tags=["verification"])
 whatsapp_service = WhatsAppService()
