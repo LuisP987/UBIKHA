@@ -22,20 +22,23 @@ class UsuarioMostrar(BaseModel):
     activo: bool
 
     class Config:
-        from_attributes = True  # Para compatibilidad con SQLAlchemy
+        from_attributes = True 
         
 class RegistroUsuario(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=6)
-    full_name: str = Field(..., max_length=100)
+    nombres: str
+    apellido_paterno: str
+    apellido_materno: Optional[str] = None
+    num_celular: Optional[str] = None
+    password: str
 
 class UsuarioActualizar(BaseModel):
-    full_name: Optional[str]
-    password: Optional[str]
-    phone_number: Optional[str]
+    nombres: str
+    apellido_paterno: str
+    apellido_materno: Optional[str] = None
+    num_celular: Optional[str]
 
 class CambiarPassword(BaseModel):
-    email: EmailStr
     password_actual: str
     password_nueva: str
 

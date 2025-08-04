@@ -7,3 +7,6 @@ class FavoritoCreate(BaseModel):
 class FavoritoOut(BaseModel):
     id_usuario: int
     id_inmueble: int
+
+    class Config:
+        orm_mode = True

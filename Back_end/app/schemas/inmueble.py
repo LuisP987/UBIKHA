@@ -19,7 +19,7 @@ class InmuebleOut(BaseModel):
     estado: str
 
 class InmuebleUpdate(BaseModel):
-    precio: Optional[float]
+    precio_mensual: Optional[float]
     tipo_inmueble: Optional[str]
     descripcion: Optional[str]
     estado: Optional[str]
