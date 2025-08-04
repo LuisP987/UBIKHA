@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from schemas.user import LoginUsuario, RegistroUsuario
+from schemas.user import LoginUsuario, RegistroUsuario, UsuarioMostrar
 from db.database import obtener_sesion
 from services.user import buscar_usuario_por_email, crear_usuario
 from utils.security.seguridad import verificar_password, hashear_password
-from utils.security.jwt import crear_token
+from utils.security.jwt import crear_token, obtener_usuario_actual
 from schemas.verification import PhoneVerification, CodeVerification
 from services.whatsapp import WhatsAppService
-from schemas.user import CambiarPassword
+from schemas.user import CambiarPassword, UsuarioActualizar
+from models.user import Usuario
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
 #verification de telefono
@@ -19,7 +20,7 @@ whatsapp_service = WhatsAppService()
 async def login(datos: LoginUsuario, db: AsyncSession = Depends(obtener_sesion)):
     usuario = await buscar_usuario_por_email(db, datos.email)
     
-    if not usuario or not verificar_password(datos.password, usuario.hashed_password):
+    if not usuario or not verificar_password(datos.password, usuario.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales inválidas"
@@ -27,15 +28,15 @@ async def login(datos: LoginUsuario, db: AsyncSession = Depends(obtener_sesion))
 
     token = crear_token({
         "sub": usuario.email,
-        "id": usuario.id,
-        "rol": usuario.rol
+        "id": usuario.id_usuario,
+        "rol": usuario.tipo_usuario
     })
 
     return {
         "access_token": token,
         "token_type": "bearer",
         "usuario": usuario.email,
-        "rol": usuario.rol
+        "rol": usuario.tipo_usuario
     }
 
 
@@ -49,11 +50,10 @@ async def registro(datos: RegistroUsuario, db: AsyncSession = Depends(obtener_se
             status_code=400,
             detail="El correo ya está registrado."
         )
-    
-    # Encriptar la contraseña antes de guardarla
+
+    # Convertir a diccionario y hashear la contraseña
     datos_dict = datos.dict()
-    datos_dict["hashed_password"] = hashear_password(datos.password)
-    del datos_dict["password"]  # ya no necesitamos el campo original
+    datos_dict["password"] = hashear_password(datos.password)
 
     # Crear nuevo usuario en la BD
     nuevo_usuario = await crear_usuario(db, datos_dict)
@@ -76,27 +76,33 @@ async def Verificar_Codigo(verification: CodeVerification):
         return {"verified": True}
     raise HTTPException(status_code=400, detail="Invalid verification code")
 
-@router.put("/perfil")
-async def actualizar_perfil(datos: RegistroUsuario, db: AsyncSession = Depends(obtener_sesion)):
-    usuario = await buscar_usuario_por_email(db, datos.email)
+@router.put("/{email}/perfil")
+async def actualizar_perfil(datos: UsuarioActualizar,email: str, db: AsyncSession = Depends(obtener_sesion)):
+    usuario = await buscar_usuario_por_email(db, email)
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
     
     # Actualiza los campos permitidos
-    usuario.full_name = datos.full_name
-    usuario.hashed_password = hashear_password(datos.password)
-    usuario.phone_number = datos.phone_number
+    usuario.nombres = datos.nombres
+    usuario.apellido_paterno = datos.apellido_paterno
+    usuario.apellido_materno = datos.apellido_materno
+    usuario.num_celular = datos.num_celular
+    
 
     await db.commit()
     await db.refresh(usuario)
     return {"mensaje": "Perfil actualizado", "usuario": usuario.email}
 
-@router.post("/cambiar-password")
-async def cambiar_password(datos: CambiarPassword , db: AsyncSession = Depends(obtener_sesion)):
-    usuario = await buscar_usuario_por_email(db, datos.email)
-    if not usuario or not verificar_password(datos.password_actual, usuario.hashed_password):
+@router.post("/{email}/cambiar-password")
+async def cambiar_password(datos: CambiarPassword ,email: str, db: AsyncSession = Depends(obtener_sesion)):
+    usuario = await buscar_usuario_por_email(db, email)
+    if not usuario or not verificar_password(datos.password_actual, usuario.password):
         raise HTTPException(status_code=401, detail="Credenciales inválidas")
     usuario.hashed_password = hashear_password(datos.password_nueva)
     await db.commit()
     await db.refresh(usuario)
     return {"mensaje": "Contraseña actualizada correctamente"}
+
+@router.get("/perfil", response_model=UsuarioMostrar)
+async def obtener_perfil(usuario: Usuario = Depends(obtener_usuario_actual)):
+    return usuario

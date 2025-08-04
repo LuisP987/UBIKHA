@@ -7,6 +7,7 @@ from schemas.user import UsuarioCrear, UsuarioMostrar
 from utils.security.seguridad import hashear_password
 from schemas.user import UsuarioEstado
 
+
 router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
 
 @router.get("/", response_model=list[UsuarioMostrar])
@@ -61,3 +62,5 @@ async def eliminar_usuario(email: str, db: AsyncSession = Depends(obtener_sesion
     await db.delete(usuario)
     await db.commit()
     return {"mensaje": "Usuario eliminado correctamente"}
+
+
