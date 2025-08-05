@@ -16,4 +16,4 @@ class MensajeOut(BaseModel):
     estado_mensaje: str
 
     class Config:
-        orm_mode = True
+        from_attributes = True

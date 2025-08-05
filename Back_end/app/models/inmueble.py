@@ -22,6 +22,7 @@ class Inmueble(Base):
     favoritos = relationship("Favorito", back_populates="inmueble")
     resenas = relationship("Resena", back_populates="inmueble")
     imagenes = relationship("ImagenInmueble", back_populates="inmueble")
+    reportes = relationship("Reporte", back_populates="inmueble")
 
     def __repr__(self):
         return f"<Inmueble(id_inmueble={self.id_inmueble}, titulo='{self.titulo}')>"

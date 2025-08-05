@@ -18,6 +18,9 @@ class InmuebleOut(BaseModel):
     tipo_inmueble: str
     estado: str
 
+    class Config:
+        from_attributes = True
+
 class InmuebleUpdate(BaseModel):
     precio_mensual: Optional[float]
     tipo_inmueble: Optional[str]

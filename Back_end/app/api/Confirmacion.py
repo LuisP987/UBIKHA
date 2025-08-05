@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from db.database import obtener_sesion
-from models.user import Usuario as User
+from models.usuario import Usuario as User
 from utils.email_utils import enviar_codigo_verificacion
 import secrets
 

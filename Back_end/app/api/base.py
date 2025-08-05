@@ -1,6 +1,5 @@
 from fastapi import APIRouter
 from sqlalchemy import text
-from models import user
 from db.database import motor, Base # asegúrate de importar correctamente tu motor
 
 router = APIRouter()

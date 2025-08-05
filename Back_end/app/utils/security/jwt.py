@@ -1,4 +1,4 @@
-from jose import JWTError, jwt
+from jose import JWTError, jwt, ExpiredSignatureError
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
@@ -17,7 +17,7 @@ if SECRET_KEY is None:
 ALGORITHM = "HS256"
 EXPIRACION_MINUTOS = 60
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 def crear_token(data: dict):
     datos_a_codificar = data.copy()
@@ -30,29 +30,44 @@ def verificar_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
+    except ExpiredSignatureError:
+        return {"error": "token_expired"}
     except JWTError:
-        return None
+        return {"error": "token_invalid"}
 
 async def obtener_usuario_actual(
     token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(obtener_sesion)
 ):
-    credenciales_incorrectas = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Credenciales inválidas",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
-            raise credenciales_incorrectas
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token inválido: falta información del usuario",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token expirado. Por favor, inicia sesión nuevamente",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     except JWTError:
-        raise credenciales_incorrectas
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido o corrupto",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     usuario = await buscar_usuario_por_email(db, email)
     if usuario is None:
-        raise credenciales_incorrectas
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Usuario no encontrado. El token puede estar vinculado a un usuario eliminado",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     return usuario
 
