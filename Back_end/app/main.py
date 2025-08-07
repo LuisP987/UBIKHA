@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from api import auth, Confirmacion, base, user as user_router, verification, favorito, inmueble
-from api import mensaje, reserva, pago, imagen, resena, notificacion, reporte
+from api import mensaje, reserva, pago, imagen, resena, notificacion, reporte, whatsapp_auth
 from utils.security import cors
 from utils.error_handlers import global_exception_handler, database_exception_handler
 from sqlalchemy.exc import SQLAlchemyError
@@ -41,6 +41,8 @@ app.include_router(imagen.router)
 app.include_router(resena.router)
 app.include_router(notificacion.router)
 app.include_router(reporte.router)
+# WhatsApp Authentication Router
+app.include_router(whatsapp_auth.router)
 
 def obtener_ip_local():
     """Obtiene la IP local de la máquina"""

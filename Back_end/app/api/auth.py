@@ -4,8 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from schemas.user import LoginUsuario, RegistroUsuario, UsuarioMostrar, UsuarioPerfilCompleto
 from schemas.user import CambiarPassword, UsuarioActualizar, CambiarCelular
 from db.database import obtener_sesion
-from services.user import buscar_usuario_por_email, crear_usuario, actualizar_usuario
-from utils.security.seguridad import verificar_password, hashear_password
+from services.user import buscar_usuario_por_email, buscar_usuario_por_celular, crear_usuario, actualizar_usuario
+from utils.security.seguridad import verificar_password, hashear_password, es_password_hasheada
 from utils.security.jwt import crear_token, obtener_usuario_actual
 from utils.security.error_messages import AuthErrorMessages
 from schemas.verification import PhoneVerification, CodeVerification
@@ -25,8 +25,8 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(), 
     db: AsyncSession = Depends(obtener_sesion)
 ):
-    # En OAuth2PasswordRequestForm, el email viene en form_data.username
-    usuario = await buscar_usuario_por_email(db, form_data.username)
+    # En OAuth2PasswordRequestForm, el número de celular viene en form_data.username
+    usuario = await buscar_usuario_por_celular(db, form_data.username)
     
     if not usuario or not verificar_password(form_data.password, usuario.password):
         raise HTTPException(
@@ -36,7 +36,7 @@ async def login(
         )
 
     token = crear_token({
-        "sub": usuario.email,
+        "sub": usuario.num_celular,
         "id": usuario.id_usuario,
         "rol": usuario.tipo_usuario
     })
@@ -44,14 +44,14 @@ async def login(
     return {
         "access_token": token,
         "token_type": "bearer",
-        "usuario": usuario.email,
+        "usuario": usuario.num_celular,
         "rol": usuario.tipo_usuario
     }
 
 # 🚪 LOGIN ALTERNATIVO - Para usar con JSON (opcional)
 @router.post("/login-json")
 async def login_json(datos: LoginUsuario, db: AsyncSession = Depends(obtener_sesion)):
-    usuario = await buscar_usuario_por_email(db, datos.email)
+    usuario = await buscar_usuario_por_celular(db, datos.num_celular)
     
     if not usuario or not verificar_password(datos.password, usuario.password):
         raise HTTPException(
@@ -60,7 +60,7 @@ async def login_json(datos: LoginUsuario, db: AsyncSession = Depends(obtener_ses
         )
 
     token = crear_token({
-        "sub": usuario.email,
+        "sub": usuario.num_celular,
         "id": usuario.id_usuario,
         "rol": usuario.tipo_usuario
     })
@@ -68,7 +68,7 @@ async def login_json(datos: LoginUsuario, db: AsyncSession = Depends(obtener_ses
     return {
         "access_token": token,
         "token_type": "bearer",
-        "usuario": usuario.email,
+        "usuario": usuario.num_celular,
         "rol": usuario.tipo_usuario
     }
 
@@ -76,12 +76,20 @@ async def login_json(datos: LoginUsuario, db: AsyncSession = Depends(obtener_ses
 @router.post("/registro", status_code=status.HTTP_201_CREATED)
 async def registro(datos: RegistroUsuario, db: AsyncSession = Depends(obtener_sesion)):
     try:
-        # Verificar si el usuario ya existe
-        usuario_existente = await buscar_usuario_por_email(db, datos.email)
-        if usuario_existente:
+        # Verificar si el email ya existe
+        usuario_existente_email = await buscar_usuario_por_email(db, datos.email)
+        if usuario_existente_email:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=AuthErrorMessages.EMAIL_ALREADY_EXISTS
+            )
+        
+        # Verificar si el número de celular ya existe
+        usuario_existente_celular = await buscar_usuario_por_celular(db, datos.num_celular)
+        if usuario_existente_celular:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="El número de celular ya está registrado"
             )
         
         # Crear nuevo usuario
@@ -329,3 +337,49 @@ async def verificar_codigo(verification: CodeVerification):
         return {"message": "Código verificado exitosamente", "verified": True}
     else:
         raise HTTPException(status_code=400, detail=AuthErrorMessages.INVALID_VERIFICATION_CODE)
+
+# ENDPOINT: Corregir contraseñas no hasheadas (TEMPORAL - SOLO PARA DESARROLLO)
+@router.post("/corregir-passwords")
+async def corregir_passwords(db: AsyncSession = Depends(obtener_sesion)):
+    """
+    Endpoint temporal para corregir contraseñas que no están hasheadas correctamente.
+    SOLO USAR EN DESARROLLO.
+    """
+    try:
+        from sqlalchemy import select, update
+        from models.usuario import Usuario
+        
+        # Buscar todos los usuarios
+        resultado = await db.execute(select(Usuario))
+        usuarios = resultado.scalars().all()
+        
+        usuarios_corregidos = 0
+        
+        for usuario in usuarios:
+            # Verificar si la contraseña no está hasheada
+            if not es_password_hasheada(usuario.password):
+                # Hashear la contraseña en texto plano
+                nuevo_hash = hashear_password(usuario.password)
+                
+                # Actualizar en la base de datos
+                await db.execute(
+                    update(Usuario)
+                    .where(Usuario.id_usuario == usuario.id_usuario)
+                    .values(password=nuevo_hash)
+                )
+                usuarios_corregidos += 1
+        
+        await db.commit()
+        
+        return {
+            "message": f"Se corrigieron {usuarios_corregidos} contraseñas",
+            "usuarios_procesados": len(usuarios),
+            "usuarios_corregidos": usuarios_corregidos
+        }
+        
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al corregir contraseñas: {str(e)}"
+        )

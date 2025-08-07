@@ -9,6 +9,15 @@ async def buscar_usuario_por_email(db: AsyncSession, email: str):
     resultado = await db.execute(select(Usuario).where(Usuario.email == email))
     return resultado.scalars().first()
 
+async def buscar_usuario_por_celular(db: AsyncSession, num_celular: str):
+    """Busca un usuario por su número de celular"""
+    resultado = await db.execute(select(Usuario).where(Usuario.num_celular == num_celular))
+    return resultado.scalars().first()
+
+async def buscar_usuario_por_telefono(db: AsyncSession, num_celular: str):
+    """Alias para buscar_usuario_por_celular - compatibilidad con WhatsApp auth"""
+    return await buscar_usuario_por_celular(db, num_celular)
+
 async def crear_usuario(db: AsyncSession, datos: dict):
     nuevo = Usuario(**datos)
     db.add(nuevo)

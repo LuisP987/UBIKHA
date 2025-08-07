@@ -11,7 +11,7 @@ class Usuario(Base):
     nombres = Column(String(100), nullable=False)
     apellido_paterno = Column(String(50), nullable=False)
     apellido_materno = Column(String(50), nullable=True)
-    num_celular = Column(String(20), unique=True, nullable=True)
+    num_celular = Column(String(20), unique=True, nullable=False, index=True)
     fecha_nacimiento = Column(DateTime, nullable=True)
     email = Column(String(100), unique=True, index=True, nullable=False)
     password = Column(String(255), nullable=False)

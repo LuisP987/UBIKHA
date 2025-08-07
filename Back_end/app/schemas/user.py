@@ -3,14 +3,14 @@ from typing import Optional
 from datetime import datetime, date
 
 class LoginUsuario(BaseModel):
-    email: EmailStr
+    num_celular: str = Field(..., description="Número de celular para el login")
     password: str
 
 class UsuarioCrear(BaseModel):
     nombres: str
     apellido_paterno: str
     apellido_materno: Optional[str] = None
-    num_celular: Optional[str] = None
+    num_celular: str = Field(..., pattern=r"^9\d{8}$", description="Número de celular peruano (9 dígitos, empieza con 9)")
     fecha_nacimiento: Optional[date] = None
     email: EmailStr
     password: str  # Esto luego lo puedes hashear
@@ -54,7 +54,7 @@ class RegistroUsuario(BaseModel):
     nombres: str = Field(..., min_length=2, max_length=100, description="Nombres del usuario")
     apellido_paterno: str = Field(..., min_length=2, max_length=50, description="Apellido paterno")
     apellido_materno: Optional[str] = Field(None, max_length=50, description="Apellido materno (opcional)")
-    num_celular: Optional[str] = Field(None, pattern=r"^9\d{8}$", description="Número de celular peruano (9 dígitos, empieza con 9)")
+    num_celular: str = Field(..., pattern=r"^9\d{8}$", description="Número de celular peruano (9 dígitos, empieza con 9)")
     fecha_nacimiento: Optional[date] = Field(None, description="Fecha de nacimiento (solo fecha, sin hora)")
     password: str = Field(..., min_length=8, description="Contraseña (mínimo 8 caracteres)")
     
