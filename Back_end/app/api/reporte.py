@@ -56,7 +56,7 @@ async def enviar_reporte(
     nuevo_reporte = Reporte(
         id_usuario=usuario_actual.id_usuario,
         id_inmueble=reporte_data.id_inmueble,
-        motivo=reporte_data.motivo,
+        tipo_reporte=reporte_data.tipo_reporte,
         descripcion=reporte_data.descripcion
     )
     

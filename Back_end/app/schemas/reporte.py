@@ -11,14 +11,14 @@ class EstadoReporteEnum(str, Enum):
 
 class ReporteCreate(BaseModel):
     id_inmueble: int
-    motivo: str
+    tipo_reporte: str
     descripcion: Optional[str] = None
 
 class ReporteOut(BaseModel):
     id_reporte: int
     id_usuario: int
     id_inmueble: int
-    motivo: str
+    tipo_reporte: str
     descripcion: Optional[str]
     fecha_reporte: datetime
     estado_reporte: str

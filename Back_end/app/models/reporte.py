@@ -8,7 +8,7 @@ class Reporte(Base):
     id_reporte = Column(Integer, primary_key=True, index=True)
     id_usuario = Column(Integer, ForeignKey("usuarios.id_usuario"), nullable=False)
     id_inmueble = Column(Integer, ForeignKey("inmuebles.id_inmueble"), nullable=False)
-    motivo = Column(String(255), nullable=False)
+    tipo_reporte = Column(String(255), nullable=False)
     descripcion = Column(String(500), nullable=True)
     fecha_reporte = Column(DateTime, server_default=func.now())
     estado_reporte = Column(String(20), default="pendiente")
@@ -17,4 +17,4 @@ class Reporte(Base):
     inmueble = relationship("Inmueble", back_populates="reportes")
 
     def __repr__(self):
-        return f"<Reporte(id_reporte={self.id_reporte}, motivo='{self.motivo}', estado_reporte='{self.estado_reporte}')>"
+        return f"<Reporte(id_reporte={self.id_reporte}, tipo_reporte='{self.tipo_reporte}', estado_reporte='{self.estado_reporte}')>"
