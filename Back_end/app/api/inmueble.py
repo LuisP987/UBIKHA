@@ -77,7 +77,22 @@ async def detalle_inmueble(id_inmueble: int, db: AsyncSession = Depends(obtener_
     inmueble = await db.get(Inmueble, id_inmueble)
     if not inmueble:
         raise HTTPException(status_code=404, detail=INMUEBLE_NO_ENCONTRADO)
-    return inmueble
+    caracteristicas = inmueble.caracteristicas
+    return {
+        "id_inmueble": inmueble.id_inmueble,
+        "id_propietario": inmueble.id_propietario,
+        "titulo": inmueble.titulo,
+        "descripcion": inmueble.descripcion,
+        "precio_mensual": inmueble.precio_mensual,
+        "tipo_inmueble": inmueble.tipo_inmueble,
+        "estado": inmueble.estado,
+        "wifi": caracteristicas.wifi if caracteristicas else False,
+        "cocina": caracteristicas.cocina if caracteristicas else False,
+        "refrigeradora": caracteristicas.refrigeradora if caracteristicas else False,
+        "estacionamiento": caracteristicas.estacionamiento if caracteristicas else False,
+        "mascotas_permitidas": caracteristicas.mascotas_permitidas if caracteristicas else False,
+        "camaras_seguridad": caracteristicas.camaras_seguridad if caracteristicas else False
+    }
 
 # PUT: Editar inmueble
 @router.put("/{id_inmueble}", response_model=Dict)
