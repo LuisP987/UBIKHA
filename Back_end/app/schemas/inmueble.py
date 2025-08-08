@@ -17,6 +17,12 @@ class InmuebleOut(BaseModel):
     precio_mensual: float
     tipo_inmueble: str
     estado: str
+    wifi: bool
+    cocina: bool
+    refrigeradora: bool
+    estacionamiento: bool
+    mascotas_permitidas: bool
+    camaras_seguridad: bool
 
     class Config:
         from_attributes = True
