@@ -38,7 +38,6 @@ class CaracteristicasInmueble(Base):
     capacidad = Column(Integer, nullable=False)
     wifi = Column(Boolean, default=False)
     cocina = Column(Boolean, default=False)
-    refrigeradora = Column(Boolean, default=False)
     estacionamiento = Column(Boolean, default=False)
     mascotas_permitidas = Column(Boolean, default=False)
     camaras_seguridad = Column(Boolean, default=False)

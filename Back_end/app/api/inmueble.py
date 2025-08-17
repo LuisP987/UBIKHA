@@ -64,12 +64,45 @@ async def crear_inmueble(
 # GET: Listar inmuebles filtrados
 @router.get("/", response_model=List[InmuebleOut])
 async def listar_inmuebles(tipo_inmueble: Optional[str] = None, db: AsyncSession = Depends(obtener_sesion)):
-    stmt = select(Inmueble)
-    if tipo_inmueble:
-        stmt = stmt.where(Inmueble.tipo_inmueble == tipo_inmueble)
-    result = await db.execute(stmt)
-    inmuebles = result.scalars().all()
-    return inmuebles
+    try:
+        # Usar joinedload para cargar características en una sola consulta
+        from sqlalchemy.orm import joinedload
+        
+        stmt = select(Inmueble).options(joinedload(Inmueble.caracteristicas))
+        if tipo_inmueble:
+            stmt = stmt.where(Inmueble.tipo_inmueble == tipo_inmueble)
+        
+        result = await db.execute(stmt)
+        inmuebles = result.unique().scalars().all()
+        
+        # Construir respuesta con características incluidas
+        inmuebles_con_caracteristicas = []
+        for inmueble in inmuebles:
+            caracteristicas = inmueble.caracteristicas
+            
+            inmueble_data = {
+                "id_inmueble": inmueble.id_inmueble,
+                "id_propietario": inmueble.id_propietario,
+                "titulo": inmueble.titulo,
+                "descripcion": inmueble.descripcion,
+                "precio_mensual": inmueble.precio_mensual,
+                "tipo_inmueble": inmueble.tipo_inmueble,
+                "estado": inmueble.estado,
+                "wifi": caracteristicas.wifi if caracteristicas else False,
+                "cocina": caracteristicas.cocina if caracteristicas else False,
+                "estacionamiento": caracteristicas.estacionamiento if caracteristicas else False,
+                "mascotas_permitidas": caracteristicas.mascotas_permitidas if caracteristicas else False,
+                "camaras_seguridad": caracteristicas.camaras_seguridad if caracteristicas else False
+            }
+            inmuebles_con_caracteristicas.append(inmueble_data)
+        
+        return inmuebles_con_caracteristicas
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error al listar inmuebles: {str(e)}"
+        )
 
 # GET: Ver detalle de inmueble
 @router.get("/{id_inmueble}", response_model=InmuebleOut)
@@ -88,7 +121,6 @@ async def detalle_inmueble(id_inmueble: int, db: AsyncSession = Depends(obtener_
         "estado": inmueble.estado,
         "wifi": caracteristicas.wifi if caracteristicas else False,
         "cocina": caracteristicas.cocina if caracteristicas else False,
-        "refrigeradora": caracteristicas.refrigeradora if caracteristicas else False,
         "estacionamiento": caracteristicas.estacionamiento if caracteristicas else False,
         "mascotas_permitidas": caracteristicas.mascotas_permitidas if caracteristicas else False,
         "camaras_seguridad": caracteristicas.camaras_seguridad if caracteristicas else False

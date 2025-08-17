@@ -17,12 +17,12 @@ class InmuebleOut(BaseModel):
     precio_mensual: float
     tipo_inmueble: str
     estado: str
-    wifi: bool
-    cocina: bool
-    refrigeradora: bool
-    estacionamiento: bool
-    mascotas_permitidas: bool
-    camaras_seguridad: bool
+    # Características disponibles en la BD
+    wifi: bool = False
+    cocina: bool = False
+    estacionamiento: bool = False
+    mascotas_permitidas: bool = False
+    camaras_seguridad: bool = False
 
     class Config:
         from_attributes = True
