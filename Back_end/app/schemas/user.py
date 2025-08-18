@@ -40,14 +40,77 @@ class UsuarioPerfilCompleto(BaseModel):
     email: EmailStr
     num_celular: Optional[str] = None
     fecha_nacimiento: Optional[date] = None
-    tipo_usuario: str
+    tipo_usuario: str = Field(..., description="Roles del usuario (puede contener: arrendatario, arrendador, o ambos separados por coma)")
     activo: bool
     celular_verificado: bool
     fecha_registro: Optional[datetime] = None
     fecha_actualizacion: Optional[datetime] = None
     
+    @property
+    def roles(self) -> list[str]:
+        """Retorna los roles como una lista"""
+        return [rol.strip() for rol in self.tipo_usuario.split(',') if rol.strip()]
+    
+    @property
+    def es_arrendatario(self) -> bool:
+        """Verifica si el usuario tiene rol de arrendatario"""
+        return "arrendatario" in self.roles
+    
+    @property
+    def es_arrendador(self) -> bool:
+        """Verifica si el usuario tiene rol de arrendador"""
+        return "arrendador" in self.roles
+    
     class Config:
         from_attributes = True 
+
+class RegistroCompletarWhatsApp(BaseModel):
+    """Schema simplificado para completar registro después de verificación WhatsApp"""
+    email: EmailStr
+    nombres: str = Field(..., min_length=2, max_length=100, description="Nombres del usuario")
+    apellido_paterno: str = Field(..., min_length=2, max_length=50, description="Apellido paterno")
+    apellido_materno: Optional[str] = Field(None, max_length=50, description="Apellido materno (opcional)")
+    fecha_nacimiento: Optional[date] = Field(None, description="Fecha de nacimiento (solo fecha, sin hora)")
+    password: str = Field(..., min_length=8, description="Contraseña (mínimo 8 caracteres)")
+    confirmar_password: str = Field(..., min_length=8, description="Confirmar contraseña")
+    
+    @field_validator('confirmar_password')
+    @classmethod
+    def validar_passwords_coinciden(cls, v, info):
+        if 'password' in info.data and v != info.data['password']:
+            raise ValueError('Las contraseñas no coinciden')
+        return v
+    
+    @field_validator('fecha_nacimiento')
+    @classmethod
+    def validar_fecha_nacimiento(cls, v):
+        if v is not None:
+            # Verificar que la fecha no sea futura
+            if v > date.today():
+                raise ValueError('La fecha de nacimiento no puede ser futura')
+            
+            # Verificar que la persona tenga al menos 13 años
+            edad_minima = date.today().replace(year=date.today().year - 13)
+            if v > edad_minima:
+                raise ValueError('Debes tener al menos 13 años para registrarte')
+                
+            # Verificar que la fecha no sea demasiado antigua (máximo 120 años)
+            edad_maxima = date.today().replace(year=date.today().year - 120)
+            if v < edad_maxima:
+                raise ValueError('La fecha de nacimiento no es válida')
+        
+        return v
+    
+    @field_validator('nombres', 'apellido_paterno', 'apellido_materno')
+    @classmethod
+    def validar_nombres(cls, v):
+        if v is not None and v.strip():
+            # Verificar que solo contenga letras, espacios y algunos caracteres especiales
+            import re
+            if not re.match(r"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$", v.strip()):
+                raise ValueError('Los nombres solo pueden contener letras y espacios')
+            return v.strip().title()  # Capitalizar palabras
+        return v
         
 class RegistroUsuario(BaseModel):
     email: EmailStr

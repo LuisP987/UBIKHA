@@ -5,7 +5,7 @@ from typing import List
 from db.database import obtener_sesion
 from models.reserva import Reserva
 from models.usuario import Usuario
-from schemas.reserva import ReservaCreate, ReservaOut, ReservaUpdate
+from schemas.reserva import ReservaCreate, ReservaOut, ReservaUpdate, ListaReservasResponse
 from utils.security.jwt import obtener_usuario_actual
 
 router = APIRouter(prefix="/reservas", tags=["Reservas"])
@@ -30,12 +30,67 @@ async def crear_reserva(
     
     return nueva_reserva
 
-# GET /reservas/ - Listar reservas del usuario
-@router.get("/", response_model=List[ReservaOut])
+# GET /reservas/ - Listar reservas del usuario con mensaje informativo
+@router.get("/", response_model=ListaReservasResponse)
 async def listar_reservas_usuario(
     db: AsyncSession = Depends(obtener_sesion),
     usuario_actual: Usuario = Depends(obtener_usuario_actual)
 ):
+    """
+    Lista todas las reservas del usuario autenticado.
+    Proporciona un mensaje claro cuando no hay reservas.
+    """
+    result = await db.execute(
+        select(Reserva).where(Reserva.id_usuario == usuario_actual.id_usuario)
+    )
+    reservas = result.scalars().all()
+    
+    total_reservas = len(reservas)
+    
+    # Crear mensaje descriptivo basado en el estado de las reservas
+    if total_reservas == 0:
+        mensaje = "No tienes reservas realizadas aún. ¡Explora nuestros inmuebles y haz tu primera reserva!"
+    elif total_reservas == 1:
+        mensaje = "Tienes 1 reserva registrada"
+    else:
+        mensaje = f"Tienes {total_reservas} reservas registradas"
+    
+    # Agregar información sobre estados si hay reservas
+    if total_reservas > 0:
+        estados_count = {}
+        for reserva in reservas:
+            estado = reserva.estado
+            estados_count[estado] = estados_count.get(estado, 0) + 1
+        
+        # Crear descripción detallada
+        estados_info = []
+        for estado, count in estados_count.items():
+            if count == 1:
+                estados_info.append(f"1 {estado}")
+            else:
+                estados_info.append(f"{count} {estado}s")
+        
+        if len(estados_info) > 1:
+            mensaje += f" ({', '.join(estados_info[:-1])} y {estados_info[-1]})"
+        else:
+            mensaje += f" ({estados_info[0]})"
+    
+    return ListaReservasResponse(
+        mensaje=mensaje,
+        total_reservas=total_reservas,
+        reservas=reservas
+    )
+
+# GET /reservas/simple - Listar reservas formato simple (compatibilidad)
+@router.get("/simple", response_model=List[ReservaOut])
+async def listar_reservas_simple(
+    db: AsyncSession = Depends(obtener_sesion),
+    usuario_actual: Usuario = Depends(obtener_usuario_actual)
+):
+    """
+    Lista reservas en formato simple (solo array).
+    Mantenido para compatibilidad con clientes existentes.
+    """
     result = await db.execute(
         select(Reserva).where(Reserva.id_usuario == usuario_actual.id_usuario)
     )

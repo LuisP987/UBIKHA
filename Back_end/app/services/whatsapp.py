@@ -129,7 +129,9 @@ Tu código de verificación es: *{code}*
             # Verificar si el código es correcto
             if stored_data["code"] == code:
                 logger.info(f"Código verificado exitosamente para {phone_number}")
-                del self.verification_codes[phone_number]  # Eliminar código después de verificación exitosa
+                # Marcar como verificado en lugar de eliminar
+                self.verification_codes[phone_number]["verified"] = True
+                self.verification_codes[phone_number]["verified_at"] = datetime.now()
                 return True
             else:
                 logger.warning(f"Código incorrecto para {phone_number}")
@@ -279,4 +281,45 @@ Con UBIKHA puedes:
                     
         except Exception as e:
             logger.error(f"Error al enviar mensaje de bienvenida: {e}")
+            return False
+
+    def is_phone_verified(self, phone_number: str) -> bool:
+        """
+        Verifica si un número de teléfono ha sido verificado recientemente
+        
+        Args:
+            phone_number: Número de teléfono a verificar
+            
+        Returns:
+            bool: True si el teléfono fue verificado recientemente
+        """
+        # Verificar si existe en los códigos verificados
+        if phone_number in self.verification_codes:
+            verification_data = self.verification_codes[phone_number]
+            # Verificar si el código fue verificado y no ha expirado
+            if verification_data.get("verified", False):
+                # Considerar verificado si fue validado en los últimos 10 minutos
+                verified_at = verification_data.get("verified_at")
+                if verified_at and datetime.now() - verified_at < timedelta(minutes=10):
+                    return True
+        return False
+
+    def remove_verified_phone(self, phone_number: str) -> bool:
+        """
+        Remueve un teléfono verificado del cache después del registro exitoso
+        
+        Args:
+            phone_number: Número de teléfono a remover
+            
+        Returns:
+            bool: True si se removió exitosamente
+        """
+        try:
+            if phone_number in self.verification_codes:
+                del self.verification_codes[phone_number]
+                logger.info(f"Teléfono {phone_number} removido del cache de verificación")
+                return True
+            return False
+        except Exception as e:
+            logger.error(f"Error al remover teléfono verificado: {e}")
             return False

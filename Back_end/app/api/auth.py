@@ -94,6 +94,8 @@ async def registro(datos: RegistroUsuario, db: AsyncSession = Depends(obtener_se
         
         # Crear nuevo usuario
         datos_dict = datos.dict()
+        # Asegurar que siempre inicie como arrendatario
+        datos_dict['tipo_usuario'] = 'arrendatario'
         nuevo_usuario = await crear_usuario(db, datos_dict)
         return {
             "mensaje": "Usuario registrado exitosamente", 

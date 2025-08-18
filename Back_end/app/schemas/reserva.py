@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
+from typing import Optional, List
 from datetime import datetime
 from enum import Enum
 
@@ -26,6 +26,38 @@ class ReservaOut(BaseModel):
 
 class ReservaUpdate(BaseModel):
     estado: EstadoReservaEnum
+
+# Nuevos esquemas para respuestas más informativas
+class ListaReservasResponse(BaseModel):
+    """Respuesta completa para el listado de reservas"""
+    mensaje: str = Field(..., description="Mensaje descriptivo sobre el estado de las reservas")
+    total_reservas: int = Field(..., description="Número total de reservas del usuario")
+    reservas: List[ReservaOut] = Field(..., description="Lista de reservas (puede estar vacía)")
+    
+    class Config:
+        json_schema_extra = {
+            "examples": [
+                {
+                    "mensaje": "Tienes 2 reservas activas",
+                    "total_reservas": 2,
+                    "reservas": [
+                        {
+                            "id_reserva": 1,
+                            "id_usuario": 60,
+                            "id_inmueble": 3,
+                            "estado": "confirmada",
+                            "monto_total": 800.0,
+                            "fecha_reserva": "2025-08-17T10:30:00"
+                        }
+                    ]
+                },
+                {
+                    "mensaje": "No tienes reservas realizadas aún. ¡Explora nuestros inmuebles y haz tu primera reserva!",
+                    "total_reservas": 0,
+                    "reservas": []
+                }
+            ]
+        }
 
 class EstadoPagoEnum(str, Enum):
     pendiente = "pendiente"

@@ -19,8 +19,9 @@ class Usuario(Base):
     codigo_verificacion = Column(String(10), nullable=True)
     fecha_registro = Column(DateTime, server_default=func.now())
     fecha_actualizacion = Column(DateTime, onupdate=func.now())
-    tipo_usuario = Column(String(20), default="arrendatario")  # Por defecto es arrendatario (inquilino)
+    tipo_usuario = Column(String(50), default="arrendatario")  # Puede contener múltiples roles separados por coma
     activo = Column(Boolean, default=True)
+    # Nota: telefono_verificado no existe en la BD, usar celular_verificado
     notificaciones = relationship("Notificacion", back_populates="usuario")
 
     inmuebles = relationship("Inmueble", back_populates="propietario")

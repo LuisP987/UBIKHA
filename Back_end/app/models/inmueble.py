@@ -32,15 +32,21 @@ class CaracteristicasInmueble(Base):
     id_caracteristica = Column(Integer, primary_key=True, index=True)
     id_inmueble = Column(Integer, ForeignKey("inmuebles.id_inmueble"), unique=True)
     direccion = Column(String(255), nullable=False)
+    referencias = Column(String(255), nullable=True)  # Referencias adicionales de ubicación
     habitaciones = Column(Integer, nullable=False)
     camas = Column(Integer, nullable=False)
     banos = Column(Integer, nullable=False)
-    capacidad = Column(Integer, nullable=False)
+    capacidad = Column(Integer, nullable=False)  # Huéspedes máximos
+    
+    # Servicios disponibles (todos ahora existen en la BD)
     wifi = Column(Boolean, default=False)
     cocina = Column(Boolean, default=False)
     estacionamiento = Column(Boolean, default=False)
     mascotas_permitidas = Column(Boolean, default=False)
     camaras_seguridad = Column(Boolean, default=False)
+    television = Column(Boolean, default=False)
+    aire_acondicionado = Column(Boolean, default=False)
+    servicio_lavanderia = Column(Boolean, default=False)
 
     inmueble = relationship("Inmueble", back_populates="caracteristicas")
 

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
 from sqlalchemy.sql import func
 from db.database import Base
 from sqlalchemy.orm import relationship
@@ -9,7 +9,7 @@ class Reporte(Base):
     id_usuario = Column(Integer, ForeignKey("usuarios.id_usuario"), nullable=False)
     id_inmueble = Column(Integer, ForeignKey("inmuebles.id_inmueble"), nullable=False)
     tipo_reporte = Column(String(255), nullable=False)
-    descripcion = Column(String(500), nullable=True)
+    descripcion = Column(Text, nullable=False)  # Comentario del usuario
     fecha_reporte = Column(DateTime, server_default=func.now())
     estado_reporte = Column(String(20), default="pendiente")
 
